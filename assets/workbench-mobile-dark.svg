@@ -1,0 +1,23 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="600" height="520" viewBox="0 0 600 520" role="img" aria-labelledby="title desc"><title id="title">Travis Fortney's workbench</title><desc id="desc">Small tools for everyday friction. An illustrated Mac utility window, keyboard shortcuts, and a coffee cup.</desc><defs><pattern id="grid" width="24" height="24" patternUnits="userSpaceOnUse"><path d="M24 0H0V24" fill="none" stroke="#30475f" stroke-width=".6" opacity=".35"/></pattern></defs><rect width="600" height="520" rx="18" fill="#142337"/><rect width="600" height="520" rx="18" fill="url(#grid)"/>
+<g font-family="-apple-system,BlinkMacSystemFont,Segoe UI,Arial,sans-serif"><rect x="26" y="24" width="548" height="32" rx="7" fill="#1b3048" stroke="#30475f"/><text x="42" y="46" fill="#eef5ff" font-size="16" font-weight="700">TF</text><text x="82" y="46" fill="#afc1d6" font-size="15">Personal workbench</text><text x="30" y="125" fill="#eef5ff" font-size="52" font-weight="750" letter-spacing="-2">Travis Fortney.</text><text x="32" y="171" fill="#eef5ff" font-size="28">Small tools for everyday friction.</text><path d="M32 192h205" stroke="#9fcab9" stroke-width="4" stroke-linecap="round"/><text x="32" y="228" fill="#afc1d6" font-size="15" font-family="Menlo,Consolas,monospace">macOS utilities · open source · one silver tabby</text>
+<g transform="translate(-440 174) scale(.96)"><g transform="translate(526 86) rotate(-4 138 88)">
+<rect x="0" y="8" width="280" height="180" rx="12" fill="#30475f" opacity=".45"/>
+<rect width="280" height="180" rx="12" fill="#1b3048" stroke="#30475f"/>
+<path d="M0 36h280" stroke="#30475f"/><circle cx="17" cy="18" r="4" fill="#b97970"/><circle cx="31" cy="18" r="4" fill="#c4b17e"/><circle cx="45" cy="18" r="4" fill="#87ad9a"/>
+<text x="71" y="23" fill="#afc1d6" font-size="12">utility / small improvements</text>
+<rect x="18" y="54" width="43" height="43" rx="8" fill="#c5b8eb"/><text x="29" y="83" fill="#293551" font-size="23" font-weight="700">12</text>
+<text x="76" y="69" fill="#eef5ff" font-size="15" font-weight="600">A little less friction.</text><text x="76" y="89" fill="#afc1d6" font-size="12">One small improvement.</text>
+<rect x="18" y="113" width="244" height="40" rx="7" fill="#9fcab9"/>
+<g stroke="#233b3b" fill="none" stroke-width="1.5"><rect x="32" y="128" width="10" height="12" rx="2"/><rect x="36" y="124" width="10" height="12" rx="2"/></g>
+<text x="57" y="139" fill="#203e39" font-size="14" font-weight="600">Make it easier</text>
+</g>
+<g transform="translate(675 209) rotate(6 115 58)">
+<rect x="0" y="6" width="237" height="118" rx="12" fill="#30475f" opacity=".5"/><rect width="237" height="118" rx="12" fill="#1b3048" stroke="#30475f"/>
+<text x="18" y="27" fill="#afc1d6" font-size="12">less reaching for the mouse</text>
+<rect x="18" y="42" width="52" height="44" rx="8" fill="#233b54" stroke="#30475f"/><rect x="83" y="42" width="52" height="44" rx="8" fill="#233b54" stroke="#30475f"/>
+<text x="33" y="71" fill="#eef5ff" font-size="24">←</text><text x="98" y="71" fill="#eef5ff" font-size="24">→</text>
+<text x="156" y="71" fill="#eef5ff" font-size="21" font-family="Menlo,Consolas,monospace">⌘ K</text>
+<path d="M19 102h199" stroke="#30475f" stroke-width="3" stroke-linecap="round"/><path d="M19 102h124" stroke="#c5b8eb" stroke-width="3" stroke-linecap="round"/><circle cx="143" cy="102" r="4" fill="#c5b8eb"/>
+</g>
+<g transform="translate(496 274)"><ellipse cx="46" cy="57" rx="44" ry="7" fill="#30475f" opacity=".6"/><path d="M13 6h59l-5 38q-23 16-48 0z" fill="#c5b8eb"/><path d="M72 14h6q21 12-8 27" fill="none" stroke="#c5b8eb" stroke-width="8"/><ellipse cx="42" cy="6" rx="29" ry="7" fill="#ded5f3"/><ellipse cx="42" cy="6" rx="24" ry="4" fill="#685748"/><text x="25" y="33" fill="#3b3458" font-family="Menlo,Consolas,monospace" font-size="15">&lt;/&gt;</text></g>
+</g></g></svg>
