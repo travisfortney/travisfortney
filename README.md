@@ -9,4 +9,4 @@
   <img alt="Larry Boy running around." src="assets/larry-running-desktop-light.gif?v=6" width="960">
 </picture>
 
-<p align="right"><sub><a href="https://github.com/search?q=is%3Apr+is%3Apublic+author%3Atravisfortney&type=pullrequests">public contributions</a></sub></p>
+<h6 align="right"><a href="https://github.com/search?q=is%3Apr+is%3Apublic+author%3Atravisfortney&type=pullrequests">public contributions</a></h6>
