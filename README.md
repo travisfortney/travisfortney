@@ -10,7 +10,7 @@
 </picture>
 
 <details>
-<summary><sub>public contributions</sub></summary>
+<summary>public contributions</summary>
 
 - [Itsycal #309](https://github.com/sfsam/Itsycal/pull/309)
 - [kasetPlus #13](https://github.com/Yoddikko/kasetPlus/pull/13)
