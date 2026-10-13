@@ -10,7 +10,8 @@ FPS = 20
 SPEED = 100
 TURN_SECONDS = 0.4
 RAMP_SECONDS = 0.25
-CAT_SIZE = (72, 78)
+CAT_SIZE = (108, 117)
+STRIDE_DISTANCE = 9
 
 
 def clean_sprite(sprite):
@@ -54,9 +55,9 @@ def make_route(width):
             progress = step / 200
             bend = 20 * math.sin(math.pi * progress)
             if returning:
-                point = (16 + distance * (1 - progress), 112 + 104 * progress - bend)
+                point = (16 + distance * (1 - progress), 132 + 104 * progress - bend)
             else:
-                point = (16 + distance * progress, 216 - 104 * progress + bend)
+                point = (16 + distance * progress, 236 - 104 * progress + bend)
             if points:
                 lengths.append(lengths[-1] + math.dist(points[-1], point))
             points.append(point)
@@ -96,7 +97,7 @@ def render(width, background, sprites, idle, index, travel, routes):
         (x, baseline), row = route_point(routes[1], displacement), 1
     else:
         (x, baseline), row, displacement = routes[1][0][-1], None, 0
-    sprite = idle if row is None else sprites[row][math.floor(displacement / 6) % 8]
+    sprite = idle if row is None else sprites[row][math.floor(displacement / STRIDE_DISTANCE) % 8]
     # Keep the gait anchored to the route instead of drifting inside its tile.
     foot = sprite.getchannel("A").getbbox()[3]
     y = round(baseline) - foot
