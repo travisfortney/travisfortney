@@ -9,13 +9,4 @@
   <img alt="Larry Boy running around." src="assets/larry-running-desktop-light.gif?v=6" width="960">
 </picture>
 
-<details>
-<summary>public contributions</summary>
-
-- [Itsycal #309](https://github.com/sfsam/Itsycal/pull/309)
-- [kasetPlus #13](https://github.com/Yoddikko/kasetPlus/pull/13)
-- trash-cli: [#435](https://github.com/andreafrancia/trash-cli/pull/435), [#436](https://github.com/andreafrancia/trash-cli/pull/436)
-- [pipx #2087](https://github.com/pypa/pipx/pull/2087)
-- [All public pull requests](https://github.com/search?q=is%3Apr+is%3Apublic+author%3Atravisfortney&type=pullrequests)
-
-</details>
+<p align="right"><sub><a href="https://github.com/search?q=is%3Apr+is%3Apublic+author%3Atravisfortney&type=pullrequests">public contributions</a></sub></p>
