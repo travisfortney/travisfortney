@@ -6,9 +6,8 @@ from PIL import Image, ImageChops
 
 ROOT = Path(__file__).resolve().parents[1]
 ASSETS = ROOT / "assets"
-FPS = 20
+FPS = 25
 SPEED = 100
-TURN_SECONDS = 0.4
 RAMP_SECONDS = 0.25
 CAT_SIZE = (108, 117)
 STRIDE_DISTANCE = 9
@@ -75,64 +74,108 @@ def route_point(route, distance):
             start[1] + (end[1] - start[1]) * fraction)
 
 
-def render(width, background, sprites, idle, index, travel, routes):
-    # Start halfway through the left turn so the loop closes on the same pose.
-    t = (index / FPS - TURN_SECONDS / 2) % (2 * travel + 2 * TURN_SECONDS)
-    distance = routes[0][1][-1]
-    speed = distance / (travel - RAMP_SECONDS)
-    def position(elapsed):
-        if elapsed < RAMP_SECONDS:
-            return speed * elapsed**2 / (2 * RAMP_SECONDS)
-        if elapsed > travel - RAMP_SECONDS:
-            return distance - speed * (travel - elapsed)**2 / (2 * RAMP_SECONDS)
-        return speed * (elapsed - RAMP_SECONDS / 2)
-    if t < travel:
-        displacement = position(t)
-        (x, baseline), row = route_point(routes[0], displacement), 0
-    elif t < travel + TURN_SECONDS:
-        (x, baseline), row, displacement = routes[0][0][-1], None, 0
-    elif t < travel * 2 + TURN_SECONDS:
-        elapsed = t - travel - TURN_SECONDS
-        displacement = position(elapsed)
-        (x, baseline), row = route_point(routes[1], displacement), 1
-    else:
-        (x, baseline), row, displacement = routes[1][0][-1], None, 0
-    sprite = idle if row is None else sprites[row][math.floor(displacement / STRIDE_DISTANCE) % 8]
-    # Keep the gait anchored to the route instead of drifting inside its tile.
-    foot = sprite.getchannel("A").getbbox()[3]
-    y = round(baseline) - foot
+def compose(width, sprite, point, foot=None):
+    x, baseline = point
+    foot = sprite.getchannel("A").getbbox()[3] if foot is None else foot
     image = Image.new("RGBA", (width, 260))
-    image.alpha_composite(sprite, (round(x), y))
+    image.alpha_composite(sprite, (round(x), round(baseline) - foot))
     return image
 
 
+def choreography(width, sprites, behaviors, routes):
+    """Run, investigate the room, blink, run back, and finish with a small hop."""
+    frames = []
+    idle = behaviors["idle"][0]
+
+    def hold(sprite, point, seconds, foot=None):
+        image = compose(width, sprite, point, foot)
+        frames.extend([image] * round(seconds * FPS))
+
+    def run(route, row, start, end):
+        distance = end - start
+        travel = round((distance / SPEED + RAMP_SECONDS) * FPS) / FPS
+        speed = distance / (travel - RAMP_SECONDS)
+        for i in range(round(travel * FPS)):
+            elapsed = i / FPS
+            if elapsed < RAMP_SECONDS:
+                displacement = speed * elapsed**2 / (2 * RAMP_SECONDS)
+            elif elapsed > travel - RAMP_SECONDS:
+                displacement = distance - speed * (travel - elapsed)**2 / (2 * RAMP_SECONDS)
+            else:
+                displacement = speed * (elapsed - RAMP_SECONDS / 2)
+            position = start + displacement
+            sprite = sprites[row][math.floor(position / STRIDE_DISTANCE) % 8]
+            frames.append(compose(width, sprite, route_point(route, position)))
+
+    left, right = routes[0][0][0], routes[0][0][-1]
+    distance = routes[0][1][-1]
+    stop = distance * 0.46
+    perch = route_point(routes[0], stop)
+    hold(idle, left, 0.6)
+    run(routes[0], 0, 0, stop)
+    hold(idle, perch, 0.4)
+    # Follow adjacent direction poses smoothly, lingering on interesting views.
+    for direction in [4, 3, 2, 1, 0, 15, 14, 13, 12, 13, 14, 15, 0, 1, 2, 3, 4]:
+        hold(behaviors["look"][direction], perch, 0.4 if direction in (0, 4, 12) else 0.15)
+    hold(idle, perch, 0.4)
+    run(routes[0], 0, stop, distance)
+    # A short blink at the far end keeps the turnaround quiet.
+    for column in [0, 1, 2, 3, 4, 5, 0]:
+        hold(behaviors["idle"][column], right, 0.15)
+    run(routes[1], 1, 0, routes[1][1][-1])
+    hold(idle, left, 0.4)
+    for column in [0, 1, 2, 3, 2, 1, 0]:
+        hold(behaviors["wave"][column], left, 0.15)
+    hold(idle, left, 0.35)
+    # Preserve the atlas's hop height, interpolating its takeoff and landing.
+    jump_foot = behaviors["jump"][0].getchannel("A").getbbox()[3]
+    jump_height = jump_foot - behaviors["jump"][2].getchannel("A").getbbox()[3]
+    for i in range(round(0.88 * FPS)):
+        elapsed = i / FPS
+        column = min(4, int(elapsed / 0.18))
+        sprite = behaviors["jump"][column]
+        airborne = max(0, min(1, (elapsed - 0.12) / 0.6))
+        lift = jump_height * math.sin(math.pi * airborne)**2
+        frames.append(compose(width, sprite, (left[0], left[1] - lift)))
+    hold(idle, left, 0.6)
+    return frames
+
+
 def main():
-    with Image.open(ASSETS / "larry-source" / "running.webp") as sheet:
-        sprites = [[clean_sprite(sheet.crop((col*192, row*208, (col+1)*192, (row+1)*208))
-                    .convert("RGBA").resize(CAT_SIZE, Image.Resampling.LANCZOS))
-                    for col in range(8)] for row in range(2)]
-    with Image.open(ASSETS / "larry-source" / "idle.webp") as sheet:
-        idle = clean_sprite(sheet.crop((0, 0, 192, 208)).convert("RGBA")
-                            .resize(CAT_SIZE, Image.Resampling.LANCZOS))
+    with Image.open(ASSETS / "larry-source" / "polished-atlas.png") as sheet:
+        def row_frames(row, count):
+            return [clean_sprite(sheet.crop((round(col*sheet.width/8), round(row*sheet.height/11),
+                                             round((col+1)*sheet.width/8), round((row+1)*sheet.height/11)))
+                                 .convert("RGBA").resize(CAT_SIZE, Image.Resampling.LANCZOS))
+                    for col in range(count)]
+        sprites = [row_frames(1, 8), row_frames(2, 8)]
+        behaviors = {"idle": row_frames(0, 6), "wave": row_frames(3, 4),
+                     "jump": row_frames(4, 5), "look": row_frames(9, 8) + row_frames(10, 8)}
+        idle = behaviors["idle"][0]
     for theme, background in (("light", "#ffffff"), ("dark", "#0d1117")):
+        # Train one palette on every pose, shared across desktop and mobile.
+        poses = sprites[0] + sprites[1] + [pose for state in behaviors.values() for pose in state]
+        sample = Image.new("RGBA", (CAT_SIZE[0]*8, CAT_SIZE[1]*math.ceil(len(poses)/8)), background)
+        for i, pose in enumerate(poses):
+            sample.alpha_composite(pose, ((i % 8)*CAT_SIZE[0], (i // 8)*CAT_SIZE[1]))
+        palette = sample.convert("RGB").quantize(colors=255, method=Image.Quantize.MEDIANCUT)
+        colors = palette.getpalette()
+        colors[765:768] = [255, 0, 255]
+        palette.putpalette(colors)
         for layout, width in (("desktop", 960), ("mobile", 420)):
             routes = make_route(width)
-            travel = round((routes[0][1][-1] / SPEED + RAMP_SECONDS) * FPS) / FPS
-            frame_count = round((2 * travel + 2 * TURN_SECONDS) * FPS)
-            frames = [render(width, background, sprites, idle, i, travel, routes)
-                      for i in range(frame_count)]
+            frames = choreography(width, sprites, behaviors, routes)
+            frame_count = len(frames)
+            for number, frame in enumerate(frames):
+                bounds = frame.getchannel("A").getbbox()
+                if not bounds or not (0 < bounds[0] < bounds[2] < width
+                                      and 0 < bounds[1] < bounds[3] < frame.height):
+                    raise ValueError(f"Clipped or empty frame at {layout} frame {number}")
             opaque = []
             for frame in frames:
                 matte = Image.new("RGBA", frame.size, background)
                 matte.alpha_composite(frame)
                 opaque.append(matte.convert("RGB"))
-            sample = Image.new("RGB", (width, 260 * 16), background)
-            for i in range(16):
-                sample.paste(opaque[round(i * (frame_count - 1) / 15)], (0, i*260))
-            palette = sample.quantize(colors=255, method=Image.Quantize.MEDIANCUT)
-            colors = palette.getpalette()
-            colors[765:768] = [255, 0, 255]
-            palette.putpalette(colors)
             indexed = []
             for frame, matte in zip(frames, opaque):
                 image = matte.quantize(palette=palette, dither=Image.Dither.NONE)
@@ -143,7 +186,7 @@ def main():
             background_index = 255
             prefix = ASSETS / f"larry-running-{layout}-{theme}"
             indexed[0].save(prefix.with_suffix(".gif"), save_all=True,
-                            append_images=indexed[1:], duration=50, loop=0,
+                            append_images=indexed[1:], duration=1000 // FPS, loop=0,
                             disposal=2, optimize=False,
                             transparency=background_index, background=background_index)
             # Delta compression must reproduce every complete frame exactly.
