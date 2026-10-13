@@ -11,6 +11,9 @@ each turn, and stride timing follows travel distance. GIFs and stills have
 transparent backgrounds. Every decoded GIF frame is checked against its intended
 image to catch trails or missing pixels.
 
+Larry follows two curved diagonal paths through the space. The route is sampled
+by distance to keep his speed and stride consistent while he moves up and down.
+
 Regenerate the profile GIFs and reduced-motion stills with:
 
 ```sh

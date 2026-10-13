@@ -1,12 +1,13 @@
 """Render Larry's running loop for the profile README. Requires Pillow."""
 import math
+from bisect import bisect_right
 from pathlib import Path
 from PIL import Image, ImageChops
 
 ROOT = Path(__file__).resolve().parents[1]
 ASSETS = ROOT / "assets"
 FPS = 20
-SPEED = 80
+SPEED = 100
 TURN_SECONDS = 0.4
 RAMP_SECONDS = 0.25
 CAT_SIZE = (72, 78)
@@ -43,10 +44,40 @@ def clean_sprite(sprite):
     return sprite
 
 
-def render(width, background, sprites, idle, index, travel):
+def make_route(width):
+    """Two gently curved diagonal runs, sampled by distance for even pacing."""
+    distance = width - CAT_SIZE[0] - 32
+    routes = []
+    for returning in (False, True):
+        points, lengths = [], [0.0]
+        for step in range(201):
+            progress = step / 200
+            bend = 20 * math.sin(math.pi * progress)
+            if returning:
+                point = (16 + distance * (1 - progress), 112 + 104 * progress - bend)
+            else:
+                point = (16 + distance * progress, 216 - 104 * progress + bend)
+            if points:
+                lengths.append(lengths[-1] + math.dist(points[-1], point))
+            points.append(point)
+        routes.append((points, lengths))
+    return routes
+
+
+def route_point(route, distance):
+    points, lengths = route
+    distance = max(0, min(lengths[-1], distance))
+    segment = min(len(points) - 2, max(0, bisect_right(lengths, distance) - 1))
+    fraction = (distance - lengths[segment]) / (lengths[segment + 1] - lengths[segment])
+    start, end = points[segment], points[segment + 1]
+    return (start[0] + (end[0] - start[0]) * fraction,
+            start[1] + (end[1] - start[1]) * fraction)
+
+
+def render(width, background, sprites, idle, index, travel, routes):
     # Start halfway through the left turn so the loop closes on the same pose.
     t = (index / FPS - TURN_SECONDS / 2) % (2 * travel + 2 * TURN_SECONDS)
-    distance = width - CAT_SIZE[0] - 32
+    distance = routes[0][1][-1]
     speed = distance / (travel - RAMP_SECONDS)
     def position(elapsed):
         if elapsed < RAMP_SECONDS:
@@ -56,19 +87,19 @@ def render(width, background, sprites, idle, index, travel):
         return speed * (elapsed - RAMP_SECONDS / 2)
     if t < travel:
         displacement = position(t)
-        x, row = 16 + displacement, 0
+        (x, baseline), row = route_point(routes[0], displacement), 0
     elif t < travel + TURN_SECONDS:
-        x, row, displacement = width - CAT_SIZE[0] - 16, None, 0
+        (x, baseline), row, displacement = routes[0][0][-1], None, 0
     elif t < travel * 2 + TURN_SECONDS:
         elapsed = t - travel - TURN_SECONDS
         displacement = position(elapsed)
-        x, row = width - CAT_SIZE[0] - 16 - displacement, 1
+        (x, baseline), row = route_point(routes[1], displacement), 1
     else:
-        x, row, displacement = 16, None, 0
+        (x, baseline), row, displacement = routes[1][0][-1], None, 0
     sprite = idle if row is None else sprites[row][math.floor(displacement / 6) % 8]
-    # Match each frame's lowest foot to one baseline instead of floating.
+    # Keep the gait anchored to the route instead of drifting inside its tile.
     foot = sprite.getchannel("A").getbbox()[3]
-    y = 216 - foot
+    y = round(baseline) - foot
     image = Image.new("RGBA", (width, 260))
     image.alpha_composite(sprite, (round(x), y))
     return image
@@ -84,9 +115,10 @@ def main():
                             .resize(CAT_SIZE, Image.Resampling.LANCZOS))
     for theme, background in (("light", "#ffffff"), ("dark", "#0d1117")):
         for layout, width in (("desktop", 960), ("mobile", 420)):
-            travel = round(((width - CAT_SIZE[0] - 32) / SPEED + RAMP_SECONDS) * FPS) / FPS
+            routes = make_route(width)
+            travel = round((routes[0][1][-1] / SPEED + RAMP_SECONDS) * FPS) / FPS
             frame_count = round((2 * travel + 2 * TURN_SECONDS) * FPS)
-            frames = [render(width, background, sprites, idle, i, travel)
+            frames = [render(width, background, sprites, idle, i, travel, routes)
                       for i in range(frame_count)]
             opaque = []
             for frame in frames:
