@@ -8,5 +8,3 @@
   <source media="(prefers-color-scheme: dark)" srcset="assets/larry-running-desktop-dark.gif?v=6">
   <img alt="Larry Boy running around." src="assets/larry-running-desktop-light.gif?v=6" width="960">
 </picture>
-
-<h6 align="right"><a href="https://github.com/search?q=is%3Apr+is%3Apublic+author%3Atravisfortney&type=pullrequests">public contributions</a></h6>
